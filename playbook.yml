@@ -1,0 +1,8 @@
+- name: Deploy Connexion API
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  roles:
+    - connexion_api
+    
