@@ -1,0 +1,13 @@
+- name: Build Docker image
+  community.docker.docker_image:
+    name: connexion-api
+    tag: latest
+    source: build
+    build:
+      path: "{{ playbook_dir }}/connexion_api"
+      dockerfile: Dockerfile
+
+- name: Start services via Docker Compose V2
+  community.docker.docker_compose_v2:
+    project_src: "{{ playbook_dir | dirname }}/connexion_api"
+    state: present
