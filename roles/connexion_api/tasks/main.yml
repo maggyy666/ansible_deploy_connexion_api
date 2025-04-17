@@ -4,7 +4,7 @@
     tag: latest
     source: build
     build:
-      path: "{{ playbook_dir }}/connexion_api"
+      path: "{{ playbook_dir }}/../connexion_api"
       dockerfile: Dockerfile
 
 - name: Start services via Docker Compose V2
