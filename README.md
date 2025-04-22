@@ -35,27 +35,66 @@ Place both repositories in the **same parent folder**, for example:
 git clone https://github.com/maggyy666/connexion_api.git
 git clone https://github.com/maggyy666/ansible_deploy_connexion_api.git
 ```
-### Running the deployment
-1. **Install Ansible and the required Docker plugin:**
 
-   ```bash
-   brew install ansible
-   ansible-galaxy collection install community.docker
-   ```
-2. **Navigate to the deployment directory:**
-    ```bash
-    cd /path/to/your-folder/ansible_deploy_connexion_api
-    ```
+### Build the Docker image
+From `ansible_deploy_connexion_api` directory:
+```bash
+brew install ansible
+ansible-galaxy collection install community.docker
+ansible-playbook playbook.yml
+```
+This will build the `connexion-api:latest` Docker image locally.
 
-3. **Make sure the adjacent `connexion_api/` folder exists:**
-    ```bash
-    ls ../connexion_api
-    ```
-4. **Run the ansible playbook:**
-    ```bash
-    ansible-playbook playbook.yml
-    ```
+### Deploying with Kubernetes (Kind)
+1. **Install Kind and create local cluster**
+```bash
+brew install kind
+kind create cluster --name connexion-cluster
+```
+2. **Load the image into the cluster**
+```bash
+kind load docker-image connexion-api:latest --name connexion-cluster
+```
+3. **Create secret for Opensearch credentials**
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: opensearch-secret
+type: Opaque
+stringData:
+  OPENSEARCH_USER: user
+  OPENSEARCH_PASSWORD: password
+```
+Then apply it:
+```bash
+kubectl apply -f k8s/opensearch-secret.yaml
+```
+4. **Apply manifests**
+```bash
+kubectl apply -f k8s/opensearch-deployment.yaml
+kubectl apply -f k8s/opensearch-service.yaml
+kubectl apply -f k8s/connexion-deployment.yaml
+kubectl apply -f k8s/connexion-service.yaml
+```
+Check status
+```bash
+kubectl get pods
+kubectl get svc
+```
+You should see both services (`opensearch`, `connexion-api`) running.
 
-    This will:
-    * Build the Docker image for the Connexion API
-    * Start the API and OpenSearch using Docker Compose
+### Accessing the API (Swagger)
+
+Forward the service:
+```bash
+kubectl port-forward service/connexion-api-service 8080:80
+```
+Then open in browser:
+```bash
+http://127.0.0.1:8080/ui
+```
+Or test it with curl:
+```bash
+curl http://127.0.0.1:8080/tenants
+```
