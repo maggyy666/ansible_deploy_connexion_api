@@ -1,3 +1,22 @@
+- name: Create Docker network
+  community.docker.docker_network:
+    name: connexion_api_network
+    state: present
+
+  
+- name: Run OpenSearch container
+  community.docker.docker_container:
+    name: opensearch
+    image: opensearchproject/opensearch:latest
+    env:
+      discovery.type: single-node
+    env_file: "{{ playbook_dir }}/../connexion_api/.env"
+    ports:
+      - "9200:9200"
+    restart_policy: unless-stopped
+    networks:
+      - name: connexion_api_network
+
 - name: Build Docker image
   community.docker.docker_image:
     name: connexion-api
@@ -7,7 +26,15 @@
       path: "{{ playbook_dir }}/../connexion_api"
       dockerfile: Dockerfile
 
-- name: Start services via Docker Compose V2
-  community.docker.docker_compose_v2:
-    project_src: "{{ playbook_dir | dirname }}/connexion_api"
-    state: present
+
+- name: Run Connexion API container
+  community.docker.docker_container:
+    name: connexion-api
+    image: connexion-api:latest
+    env_file: "{{ playbook_dir }}/../connexion_api/.env"
+    ports:
+      - "8080:8080"
+    restart_policy: unless-stopped
+    networks:
+      - name: connexion_api_network
+
