@@ -1,0 +1,38 @@
+# Ignore Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Byte-compiled files
+*.pyc
+
+# macOS metadata
+.DS_Store
+
+# Docker-related
+*.log
+*.pid
+.env
+docker-compose.override.yml
+
+# Kubernetes secrets
+k8s/*secret*.yaml
+
+# Ansible cache
+*.retry
+ansible.cfg~
+
+# Virtual environments
+.venv/
+env/
+venv/
+
+# Editor files
+*.swp
+*~
+.idea/
+.vscode/
+
+# System files
+Thumbs.db
+ehthumbs.db
