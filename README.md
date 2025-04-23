@@ -47,15 +47,34 @@ This will build the `connexion-api:latest` Docker image locally.
 
 ### Deploying with Kubernetes (Kind)
 1. **Install Kind and create local cluster**
+(Make sure your `king-config.yaml` contains `extraPortMappings` for both services.)
 ```bash
 brew install kind
-kind create cluster --name connexion-cluster
+kind create cluster --config k8s/kind-config.yaml --name connexion-cluster
 ```
+Example `kind-config`:
+```yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: connexion-cluster
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 30080
+        hostPort: 30080
+        protocol: TCP
+      - containerPort: 9200
+        hostPort: 30920
+        protocol: TCP
+```
+
 2. **Load the image into the cluster**
 ```bash
 kind load docker-image connexion-api:latest --name connexion-cluster
 ```
-3. **Create secret for Opensearch credentials**
+3. **Create secret for OpenSearch credentials**
+
+File: `k8s/opensearh-secret.yaml`
 ```yaml
 apiVersion: v1
 kind: Secret
@@ -63,38 +82,34 @@ metadata:
   name: opensearch-secret
 type: Opaque
 stringData:
-  OPENSEARCH_USER: user
+  OPENSEARCH_USER: username
   OPENSEARCH_PASSWORD: password
 ```
-Then apply it:
+Apply it:
 ```bash
 kubectl apply -f k8s/opensearch-secret.yaml
 ```
-4. **Apply manifests**
+
+4. **Apply Kubernetes manifests**
 ```bash
 kubectl apply -f k8s/opensearch-deployment.yaml
 kubectl apply -f k8s/opensearch-service.yaml
 kubectl apply -f k8s/connexion-deployment.yaml
 kubectl apply -f k8s/connexion-service.yaml
 ```
-Check status
+Check status:
 ```bash
 kubectl get pods
 kubectl get svc
 ```
-You should see both services (`opensearch`, `connexion-api`) running.
+You should see both `opensearch` and `connexion-api-service` with `NodePort` values (e.g. 30080)
 
-### Accessing the API (Swagger)
-
-Forward the service:
+## Accessing the Services
+Swagger UI (Connexion API):
 ```bash
-kubectl port-forward service/connexion-api-service 8080:80
+http://localhost:30080/ui
 ```
-Then open in browser:
+Test `/tenants` endpoint:
 ```bash
-http://127.0.0.1:8080/ui
-```
-Or test it with curl:
-```bash
-curl http://127.0.0.1:8080/tenants
+curl http://localhost:30080/ui
 ```
