@@ -113,3 +113,23 @@ Test `/tenants` endpoint:
 ```bash
 curl http://localhost:30080/ui
 ```
+
+## Sample Request to Populate Data
+
+To insert a test document into the `tenants` index in OpenSearch (required for `/tenants` to return results):
+```bash
+curl -X POST https://localhost:30920/tenants/_doc/2 \
+  -u user:password \
+  -H "Content-Type: application/json" \
+  -k \
+  -d '{
+    "id": "1",
+    "description": "NAME: Company A, DATA: HR"
+  }'
+```
+Note: If the index `tenants` does not exist, this request will automatically create it.
+
+You can then call:
+```bash
+curl http://localhost:30080/tenants
+```
